@@ -251,6 +251,21 @@ fn build(app: &gtk::Application) {
     ui.window.connect_destroy(move |_| {
         let _ = &owner;
     });
+    // wisp holds the keyboard while open, so a paste meant for another app would
+    // land here instead. If something new is copied meanwhile (a screenshot, say),
+    // close so the keyboard goes back to that app. GTK also reports the existing
+    // clipboard right after opening; that is not a new copy, hence the grace period.
+    let opened = std::time::Instant::now();
+    let weak = ui.window.downgrade();
+    WidgetExt::display(&ui.window)
+        .clipboard()
+        .connect_changed(move |_| {
+            if opened.elapsed() > std::time::Duration::from_millis(400)
+                && let Some(window) = weak.upgrade()
+            {
+                window.close();
+            }
+        });
     ui.window.present();
     ui.search.grab_focus();
 }
@@ -352,9 +367,19 @@ impl Ui {
             gdk::Key::Page_Up if in_history => self.move_selection(-8),
             gdk::Key::Return | gdk::Key::KP_Enter if in_history => self.copy(self.selection.selected()),
             gdk::Key::Delete | gdk::Key::KP_Delete if in_history => self.delete_selected(),
+            // Only text can be pasted into the search box; swallow Ctrl+V otherwise
+            // instead of letting GTK ring the error bell.
+            gdk::Key::v if ctrl && !self.clipboard_has_text() => {}
             _ => return glib::Propagation::Proceed,
         }
         glib::Propagation::Stop
+    }
+
+    fn clipboard_has_text(&self) -> bool {
+        WidgetExt::display(&self.window)
+            .clipboard()
+            .formats()
+            .contains_type(glib::Type::STRING)
     }
 
     /// Reloads all entries from the database.
