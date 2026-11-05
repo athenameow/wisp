@@ -1,0 +1,226 @@
+/* wisp built-in style. Override anything in ~/.config/wisp/style.css */
+
+window.wisp {
+  background: none;
+}
+
+.card {
+  background-color: rgba(16, 16, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px;
+  color: #e8e8ee;
+  font-size: 0.9em;
+  /* GTK turns this into a compositor blur request (ext-background-effect);
+     Hyprland then blurs exactly the card's area. The radius is Hyprland's. */
+  backdrop-filter: blur(12px);
+}
+
+.card > stack {
+  min-width: 0;
+}
+
+.dim {
+  color: rgba(232, 232, 238, 0.5);
+}
+
+.meta {
+  font-size: 0.85em;
+}
+
+.time {
+  font-size: 0.82em;
+}
+
+.title {
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* Header */
+
+.header {
+  min-height: 30px;
+}
+
+.card entry {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
+  outline: none;
+  min-height: 30px;
+  padding: 0 8px;
+}
+
+.card entry:focus-within {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+button.icon {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 8px;
+  background: none;
+  box-shadow: none;
+  outline: none;
+  color: rgba(232, 232, 238, 0.6);
+}
+
+button.icon:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #e8e8ee;
+}
+
+button.icon:checked {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #e8e8ee;
+}
+
+.status {
+  font-size: 0.85em;
+  color: #e8c27a;
+  margin: 0 4px;
+}
+
+.status.error {
+  color: #ef8a8a;
+}
+
+/* History list */
+
+scrolledwindow,
+listview.history,
+textview,
+textview text {
+  background: none;
+}
+
+listview.history > row {
+  padding: 5px 8px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  outline: none;
+}
+
+listview.history > row:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+listview.history > row:selected {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: inherit;
+}
+
+.thumb {
+  border-radius: 6px;
+}
+
+/* Preview */
+
+.preview {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.preview textview {
+  font-size: 0.92em;
+  color: #dcdce4;
+}
+
+/* Settings */
+
+.setting {
+  padding: 10px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings spinbutton {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
+  outline: none;
+}
+
+.settings spinbutton > text {
+  min-width: 44px;
+  padding: 0 4px 0 10px;
+}
+
+.settings spinbutton > button {
+  min-width: 26px;
+  min-height: 26px;
+  margin: 2px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+  color: rgba(232, 232, 238, 0.6);
+}
+
+.settings spinbutton > button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #e8e8ee;
+}
+
+/* Switches: monochrome to match the card. Off: faint track, dimmed knob.
+   On: light track, dark knob. */
+.settings switch {
+  min-width: 36px;
+  min-height: 20px;
+  padding: 2px;
+  border: none;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.12);
+  background-image: none;
+  box-shadow: none;
+  outline: none;
+  transition: background-color 120ms ease-out;
+}
+
+.settings switch:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.settings switch:checked {
+  background-color: rgba(232, 232, 238, 0.88);
+}
+
+.settings switch > slider {
+  min-width: 16px;
+  min-height: 16px;
+  margin: 0;
+  border: none;
+  border-radius: 999px;
+  background-color: rgba(232, 232, 238, 0.75);
+  background-image: none;
+  box-shadow: none;
+  outline: none;
+  transition: background-color 120ms ease-out;
+}
+
+.settings switch:checked > slider {
+  background-color: #16161a;
+}
+
+/* Hide the theme's on/off glyphs inside the track. */
+.settings switch > image {
+  color: transparent;
+}
+
+button.destructive {
+  background-color: rgba(239, 138, 138, 0.14);
+  color: #ef8a8a;
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 4px 14px;
+}
+
+button.destructive:hover {
+  background-color: rgba(239, 138, 138, 0.24);
+}

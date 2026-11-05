@@ -1,0 +1,15 @@
+[Unit]
+Description=wisp clipboard history daemon
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/wispd
+Restart=on-failure
+RestartSec=2
+# Return freed memory to the OS promptly after large images are thumbnailed.
+Environment=GLIBC_TUNABLES=glibc.malloc.mmap_threshold=131072:glibc.malloc.arena_max=2
+
+[Install]
+WantedBy=graphical-session.target

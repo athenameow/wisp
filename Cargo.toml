@@ -1,0 +1,43 @@
+[package]
+name = "wisp"
+version = "0.1.0"
+edition = "2024"
+description = "A small, quiet clipboard history for Wayland: text and images, copy times, preview pane, frosted GTK4 popup"
+license = "MIT"
+repository = "https://github.com/athenameow/wisp"
+readme = "README.md"
+keywords = ["clipboard", "wayland", "hyprland", "gtk4"]
+categories = ["command-line-utilities", "gui"]
+
+[features]
+default = ["gui"]
+gui = ["dep:gtk", "dep:gtk4-layer-shell"]
+
+[[bin]]
+name = "wispd"
+path = "src/bin/wispd.rs"
+
+[[bin]]
+name = "wisp"
+path = "src/bin/wisp/main.rs"
+required-features = ["gui"]
+
+[dependencies]
+anyhow = "1.0.104"
+blake3 = "1.8.7"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "webp"] }
+rusqlite = "0.41.1"
+rustix = { version = "1.1.6", features = ["pipe", "event"] }
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.2.0"
+wayland-client = "0.31.15"
+wayland-protocols-wlr = { version = "0.3.12", features = ["client"] }
+
+gtk = { version = "0.11.5", package = "gtk4", features = ["v4_20"], optional = true }
+gtk4-layer-shell = { version = "0.8.1", optional = true }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
