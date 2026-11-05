@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=wisp
+GenericName=Clipboard History
+Comment=Browse and reuse everything you've copied
+Exec=wisp
+Icon=io.athena.wisp
+Terminal=false
+Categories=Utility;
+Keywords=clipboard;history;paste;copy;
+StartupNotify=false

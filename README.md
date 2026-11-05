@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="data/icons/io.athena.wisp.svg" alt="" width="96">
+
 # wisp
 
 **A small, quiet clipboard history for Wayland.**
@@ -70,6 +72,14 @@ systemctl --user enable --now wisp
 
 The unit is tied to `graphical-session.target`, which UWSM and most session managers provide.
 If yours doesn't, start `wispd` from your compositor's autostart instead.
+
+Optionally, add wisp to your app launcher with its icon:
+
+```sh
+install -Dm644 data/icons/io.athena.wisp.svg ~/.local/share/icons/hicolor/scalable/apps/io.athena.wisp.svg
+install -Dm644 data/io.athena.wisp.desktop ~/.local/share/applications/io.athena.wisp.desktop
+gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor
+```
 
 ### Keybind
 
@@ -151,6 +161,7 @@ off *Record history* in settings before copying something sensitive from an app 
 systemctl --user disable --now wisp
 rm ~/.config/systemd/user/wisp.service
 cargo uninstall wisp --root ~/.local
+rm -f ~/.local/share/applications/io.athena.wisp.desktop ~/.local/share/icons/hicolor/scalable/apps/io.athena.wisp.svg
 rm -r ~/.local/share/wisp ~/.config/wisp   # history and settings
 ```
 
