@@ -15,7 +15,7 @@ use std::os::fd::{AsFd, OwnedFd};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::process::ExitCode;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use wayland_client::backend::{ObjectId, WaylandError};
 use wayland_client::globals::{GlobalListContents, registry_queue_init};
 use wayland_client::protocol::{wl_registry, wl_seat::WlSeat};
@@ -44,6 +44,10 @@ const TEXT_MIMES: [&str; 5] = [
 ];
 /// Image types we can thumbnail, in order of preference.
 const IMAGE_MIMES: [&str; 3] = ["image/png", "image/jpeg", "image/webp"];
+/// How long the clipboard must stay empty before the newest entry is restored.
+/// Apps like Chromium clear the clipboard and set new contents a moment later;
+/// restoring straight away would put the old entry back over the new copy.
+const RESTORE_DELAY: Duration = Duration::from_millis(250);
 /// Give up on a clipboard source that stops sending data for this long.
 const READ_TIMEOUT: Timespec = Timespec {
     tv_sec: 5,
@@ -61,6 +65,8 @@ struct State {
     sources: HashMap<ObjectId, Arc<Vec<u8>>>,
     store: Store,
     config: Config,
+    /// When to restore the newest entry, if the clipboard is still empty then.
+    restore_at: Option<Instant>,
 }
 
 fn main() -> ExitCode {
@@ -100,6 +106,7 @@ fn run() -> anyhow::Result<()> {
         sources: HashMap::new(),
         store: Store::open()?,
         config: Config::load(),
+        restore_at: None,
     };
     state.store.prune(state.config.max_entries)?;
 
@@ -112,12 +119,20 @@ fn run() -> anyhow::Result<()> {
         let Some(guard) = queue.prepare_read() else {
             continue;
         };
+        // Sleep until there is input, or until a pending restore is due.
+        let timeout = state.restore_at.map(|at| {
+            let wait = at.saturating_duration_since(Instant::now());
+            Timespec {
+                tv_sec: wait.as_secs() as _,
+                tv_nsec: wait.subsec_nanos() as _,
+            }
+        });
         let (wayland_ready, socket_ready) = {
             let mut fds = [
                 PollFd::from_borrowed_fd(guard.connection_fd(), PollFlags::IN),
                 PollFd::new(&listener, PollFlags::IN),
             ];
-            match poll(&mut fds, None) {
+            match poll(&mut fds, timeout.as_ref()) {
                 Err(Errno::INTR) => continue,
                 other => other?,
             };
@@ -137,21 +152,21 @@ fn run() -> anyhow::Result<()> {
         if socket_ready {
             state.accept(&listener);
         }
+        state.restore_if_due();
     }
 }
 
 impl State {
     fn on_selection(&mut self, offer: Option<ZwlrDataControlOfferV1>) {
         let Some(offer) = offer else {
-            // The app that owned the clipboard is gone: hand back the newest entry.
-            if self.config.keep_clipboard
-                && self.config.history_enabled
-                && let Err(e) = self.restore_latest()
-            {
-                eprintln!("wispd: could not restore clipboard: {e:#}");
+            // The clipboard is empty: its owner exited, or it is about to set new
+            // contents. Restore the newest entry only if it stays empty a moment.
+            if self.config.keep_clipboard && self.config.history_enabled {
+                self.restore_at = Some(Instant::now() + RESTORE_DELAY);
             }
             return;
         };
+        self.restore_at = None;
         let mimes = self.offers.remove(&offer.id()).unwrap_or_default();
         let ours_or_secret = mimes.iter().any(|m| m == MARKER_MIME || m == SECRET_MIME);
         if self.config.history_enabled
@@ -181,6 +196,15 @@ impl State {
             }
         });
         Ok(())
+    }
+
+    fn restore_if_due(&mut self) {
+        if self.restore_at.is_some_and(|at| Instant::now() >= at) {
+            self.restore_at = None;
+            if let Err(e) = self.restore_latest() {
+                eprintln!("wispd: could not restore clipboard: {e:#}");
+            }
+        }
     }
 
     fn restore_latest(&mut self) -> anyhow::Result<()> {
